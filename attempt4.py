@@ -14,7 +14,8 @@ allProducts = [
 ]
 
 selectedProducts = []  # (IntVar, name, price)
-cart = {}  # name: count
+checkbox_map = {}      # name: IntVar
+cart = {}              # name: count
 
 def change_qty(name, delta):
     if name in cart:
@@ -66,26 +67,50 @@ def clear_cart():
         var.set(0)
     update_cart()
 
+# Поиск по товарам
+def on_search(*args):
+    query = search_var.get().lower()
+    listbox.delete(0, END)
+    if not query.strip():
+        listbox.place_forget()
+        return
+    matches = [p['name'] for p in allProducts if query in p['name'].lower()]
+    if matches:
+        for name in matches:
+            listbox.insert(END, name)
+        listbox.place(x=200, y=70)
+    else:
+        listbox.place_forget()
+
+def on_select(event):
+    selection = listbox.get(ACTIVE)
+    if selection not in checkbox_map:
+        # Добавляем только если не было ранее
+        product = next((p for p in allProducts if p['name'] == selection), None)
+        if product:
+            var = IntVar(value=1)  # сразу добавляем
+            selectedProducts.append((var, product['name'], product['price']))
+            checkbox_map[product['name']] = var
+    else:
+        checkbox_map[selection].set(1)
+    update_cart()
+    listbox.place_forget()
+    search_var.set("")
+
 # ---------- UI ----------
 win = Tk()
 win.title("Attempt 4")
 win.geometry("700x500")
 
-Label(win, text="Выберите товар:").place(x=70, y=50)
+Label(win, text="Введите товар для поиска:").place(x=70, y=50)
 
-ProductsFrame = Frame(win)
-ProductsFrame.place(x=200, y=40)
+# Поисковая строка
+search_var = StringVar()
+search_var.trace_add("write", on_search)
+Entry(win, textvariable=search_var, width=40).place(x=300, y=50)
 
-row1 = Frame(ProductsFrame)
-row1.pack()
-row2 = Frame(ProductsFrame)
-row2.pack(side='left')
-
-for i, product in enumerate(allProducts):
-    var = IntVar()
-    frame = row1 if i < 5 else row2
-    Checkbutton(frame, text=product['name'], variable=var, command=update_cart).pack(side='left', padx=10)
-    selectedProducts.append((var, product['name'], product['price']))
+listbox = Listbox(win, height=5, width=20)
+listbox.bind("<<ListboxSelect>>", on_select)
 
 # --- Скроллируемый фрейм для корзины ---
 canvas = Canvas(win, bg='white', width=300, height=250)
@@ -102,12 +127,15 @@ scrollable_frame.bind(
 canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
 canvas.configure(yscrollcommand=scrollbar.set)
 
+Label(win, text="Список товаров:").place(x=60, y=120)
 canvas.place(x=50, y=140)
 scrollbar.place(x=350, y=140, height=250)
 
 itemsFrame = scrollable_frame  # переопределяем имя для update_cart()
 
 # Чек и кнопки
+Label(win, text="Чек:").place(x=410, y=130)
+
 cheq = Text(win, height=12, width=25)
 cheq.place(x=400, y=150)
 

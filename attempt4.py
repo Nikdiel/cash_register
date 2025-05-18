@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 from datetime import datetime
+import tkinter.messagebox as box
 
 allProducts = [
     {'name': 'Яблоко', 'price': 30},
@@ -36,6 +37,7 @@ def change_qty(name, delta):
             del cart[name]
     elif delta > 0:
         cart[name] = 1
+    cheq.config(state=NORMAL)
     update_cart()
 
 def on_entry_click(event):
@@ -73,21 +75,30 @@ def update_cart():
         Button(item_frame, text="+", command=lambda n=name: change_qty(n, 1), relief="flat", width=3, height=1, bg="#2a2a2a", fg="#e0e0e0").pack(side="left", padx=5)
 
         total += cart[name] * price
+        cheq.config(state=NORMAL)
         cheq.insert(END, f"{name} x{cart[name]} = {cart[name]*price} тг\n")
+        cheq.config(state=DISABLED)
+        
     if total != 0:
+        cheq.config(state=NORMAL)
         cheq.insert(END, f"\nИтого: {total} тг")
+        cheq.config(state=DISABLED)
     else:
+        cheq.config(state=NORMAL)
         cheq.insert(END, "")
+        cheq.config(state=DISABLED)
         
     itemsFrame.bind("<Configure>", on_configure)
 
 def download():
+    box.showinfo("Оплата", message="Оплата прошла успешно")
     with open("cheque.txt", "w", encoding="utf-8") as f:
         f.write("Чек от: " + datetime.now().strftime("%d.%m.%Y %H:%M:%S") + "\n\n")
         f.write(cheq.get("1.0", END))
     print("Чек сохранён.")
 
 def clear_cart():
+    cheq.config(state=NORMAL)
     cart.clear()
     for var, _, _ in selectedProducts:
         var.set(0)
@@ -124,6 +135,78 @@ def on_select(event):
     update_cart()
     listbox.place_forget()
     search_var.set("")
+
+
+def update_cash(*args):
+    if num.get() == "":
+        n = ""
+    else:
+        n =  int(num.get())
+    
+    if n == "":
+        sdacha.config(text="Сдача: 0")
+    elif n < 10000 and n > 2000 and n > 1000 and n > 500 and n > 100 and n > 50:
+        sdacha.config(text=f"Сдача: {10000-n}")
+    elif n < 2000 and n < 10000 and n > 1000 and n > 500 and n > 100 and n > 50:
+        sdacha.config(text=f"Сдача: {2000-n}")
+    elif n < 1000 and n < 2000 and n < 10000 and n > 500 and n > 100 and n > 50:
+        sdacha.config(text=f"Сдача: {1000-n}")
+    elif n < 500 and n < 2000 and n < 1000 and n < 10000 and n > 100 and n > 50:
+        sdacha.config(text=f"Сдача: {500-n}")
+    elif n < 100 and n < 2000 and n < 1000 and n < 500 and n < 10000 and n > 50:
+        sdacha.config(text=f"Сдача: {100-n}")
+    elif n < 50 and n < 2000 and n < 1000 and n < 500 and n < 100 and n < 10000:
+        sdacha.config(text=f"Сдача: {50-n}")
+    else:
+        print("tresh")
+    
+
+class CashWindow(Toplevel):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.title("Покупка")
+        self.geometry("700x500")
+        self.configure(bg="#1E1E1E")
+        
+        Label(self, text="Введите купюру/копейку данную вам:", bg="#1E1E1E", fg="#E0E0E0").pack(pady=50)
+        
+        global num
+        num = StringVar()
+        num.trace_add("write", update_cash)
+        
+        Entry(self, textvariable=num, bg="#181818", fg="grey", border=0,  highlightthickness=1, highlightbackground="#2a2a2a", highlightcolor="#2a2a2a", insertbackground="#e0e0e0").pack(pady=10)
+        
+        global sdacha
+        sdacha = Label(self, text="Сдача: 0", bg="#1E1E1E", fg="#E0E0E0")
+        sdacha.pack(pady=10)
+        
+        Button(self, text="Вернуться", width=20, command=self.destroy, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672", activeforeground="#ffffff").pack(pady=10)
+        
+        Button(self, text="Зафиксировать", width=20, command=self.destroy, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672", activeforeground="#ffffff").pack(pady=10)
+        
+
+class BuyWindow(Toplevel):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.title("Покупка")
+        self.geometry("700x500")
+        self.configure(bg="#1E1E1E")
+
+        Label(self, text="Способ оплаты", bg="#1E1E1E", fg="#E0E0E0", font=("Segoe UI", 12)).pack(pady=20)
+
+        self.cheque_text = Text(self, height=10, width=40, bg="#181818", fg="#e0e0e0", border=0, highlightthickness=1, highlightbackground="#2a2a2a", insertbackground="#e0e0e0")
+        self.cheque_text.pack(pady=10)
+
+        # Copy the main window's cheque contents
+        self.cheque_text.insert(END, cheq.get("1.0", END))
+        self.cheque_text.config(state=DISABLED)  # Make it read-only
+        
+        Button(self, text="Оплата картой", width=20, command=download, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672").pack(pady=5)
+        
+        Button(self, text="Оплата наличными", width=20, command=CashWindow, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672").pack(pady=5)
+
+        Button(self, text="Закрыть", width=20, command=self.destroy, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672").pack()
+
 
 # ---------- UI ----------
 win = Tk()
@@ -177,19 +260,31 @@ scrollable_frame.bind(
 canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
 canvas.configure(yscrollcommand=scrollbar.set)
 
-Label(win, text="Список товаров:", bg="#1E1E1E", fg="#E0E0E0").place(x=60, y=110)
+listText = Label(win, text="Список товаров:", bg="#1E1E1E", fg="#E0E0E0")
+listText.place(x=60, y=110)
 canvas.place(x=50, y=140)
 
 itemsFrame = scrollable_frame  # переопределяем имя для update_cart()
 
 # Чек и кнопки
-Label(win, text="Чек:", bg="#1E1E1E", fg="#E0E0E0").place(x=410, y=120)
+cheqText = Label(win, text="Чек:", bg="#1E1E1E", fg="#E0E0E0")
+cheqText.place(x=410, y=120)
 
 cheq = Text(win, height=12, width=25, bg="#181818", fg="#e0e0e0", border=0, highlightthickness=1, highlightbackground="#2a2a2a", highlightcolor="#2a2a2a", insertbackground="#e0e0e0")
+cheq.config(state=DISABLED)
 cheq.place(x=400, y=150)
 
-downloadBtn = Button(win, text="Скачать чек", width=20, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672", activeforeground="#ffffff", command=download)
-downloadBtn.place(relx=1.0, rely=1.0, x=-20, y=-20, anchor="se")
+def buy():
+    if not cart:
+        box.showinfo("Корзина пуста", "Вы не выбрали товары для покупки.")
+        return
+    BuyWindow(win)
+    
+    # downloadBtn = Button(win, text="Оплатить", width=20, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672", activeforeground="#ffffff", command=download)
+    # downloadBtn.place(relx=1.0, rely=1.0, x=-20, y=-20, anchor="se")
+
+buyBtn = Button(win, text="Оплатить", width=20, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672", activeforeground="#ffffff", command=buy)
+buyBtn.place(relx=1.0, rely=1.0, x=-20, y=-20, anchor="se")
 
 clearBtn = Button(win, text="Очистить", width=20, bg="#333b4f", fg  ="#E0E0E0", activebackground="#4a5672", activeforeground="#ffffff", command=clear_cart)
 clearBtn.place(relx=1.0, rely=1.0, x=-220, y=-20, anchor="se")

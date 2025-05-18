@@ -96,6 +96,8 @@ def download():
         f.write("Чек от: " + datetime.now().strftime("%d.%m.%Y %H:%M:%S") + "\n\n")
         f.write(cheq.get("1.0", END))
     print("Чек сохранён.")
+    clear_cart()
+    MainWindow()
 
 def clear_cart():
     cheq.config(state=NORMAL)
@@ -137,80 +139,47 @@ def on_select(event):
     search_var.set("")
 
 
-def update_cash(*args):
+def update_change(*args):
     if num.get() == "":
         n = ""
     else:
         n =  int(num.get())
     
     if n == "":
-        sdacha.config(text="Сдача: 0")
+        change.config(text="Сдача: 0")
     elif n < 10000 and n > 2000 and n > 1000 and n > 500 and n > 100 and n > 50:
-        sdacha.config(text=f"Сдача: {10000-n}")
+        change.config(text=f"Сдача: {10000-n}")
     elif n < 2000 and n < 10000 and n > 1000 and n > 500 and n > 100 and n > 50:
-        sdacha.config(text=f"Сдача: {2000-n}")
+        change.config(text=f"Сдача: {2000-n}")
     elif n < 1000 and n < 2000 and n < 10000 and n > 500 and n > 100 and n > 50:
-        sdacha.config(text=f"Сдача: {1000-n}")
+        change.config(text=f"Сдача: {1000-n}")
     elif n < 500 and n < 2000 and n < 1000 and n < 10000 and n > 100 and n > 50:
-        sdacha.config(text=f"Сдача: {500-n}")
+        change.config(text=f"Сдача: {500-n}")
     elif n < 100 and n < 2000 and n < 1000 and n < 500 and n < 10000 and n > 50:
-        sdacha.config(text=f"Сдача: {100-n}")
+        change.config(text=f"Сдача: {100-n}")
     elif n < 50 and n < 2000 and n < 1000 and n < 500 and n < 100 and n < 10000:
-        sdacha.config(text=f"Сдача: {50-n}")
+        change.config(text=f"Сдача: {50-n}")
     else:
         print("tresh")
+        
+def MainWindow():
+    mainFrame.place(relwidth=1, relheight=1)
+    PaymentWinFrame.pack_forget()
+    buyWinFrame.pack_forget()
+
+def BuyWindow():
+    mainFrame.place_forget()
+    PaymentWinFrame.pack_forget()
+    buyWinFrame.pack()
     
-
-class CashWindow(Toplevel):
-    def __init__(self, master=None):
-        super().__init__(master)
-        self.title("Покупка")
-        self.geometry("700x500")
-        self.configure(bg="#1E1E1E")
-        
-        Label(self, text="Введите купюру/копейку данную вам:", bg="#1E1E1E", fg="#E0E0E0").pack(pady=50)
-        
-        global num
-        num = StringVar()
-        num.trace_add("write", update_cash)
-        
-        Entry(self, textvariable=num, bg="#181818", fg="grey", border=0,  highlightthickness=1, highlightbackground="#2a2a2a", highlightcolor="#2a2a2a", insertbackground="#e0e0e0").pack(pady=10)
-        
-        global sdacha
-        sdacha = Label(self, text="Сдача: 0", bg="#1E1E1E", fg="#E0E0E0")
-        sdacha.pack(pady=10)
-        
-        Button(self, text="Вернуться", width=20, command=self.destroy, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672", activeforeground="#ffffff").pack(pady=10)
-        
-        Button(self, text="Зафиксировать", width=20, command=self.destroy, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672", activeforeground="#ffffff").pack(pady=10)
-        
-
-class BuyWindow(Toplevel):
-    def __init__(self, master=None):
-        super().__init__(master)
-        self.title("Покупка")
-        self.geometry("700x500")
-        self.configure(bg="#1E1E1E")
-
-        Label(self, text="Способ оплаты", bg="#1E1E1E", fg="#E0E0E0", font=("Segoe UI", 12)).pack(pady=20)
-
-        self.cheque_text = Text(self, height=10, width=40, bg="#181818", fg="#e0e0e0", border=0, highlightthickness=1, highlightbackground="#2a2a2a", insertbackground="#e0e0e0")
-        self.cheque_text.pack(pady=10)
-
-        # Copy the main window's cheque contents
-        self.cheque_text.insert(END, cheq.get("1.0", END))
-        self.cheque_text.config(state=DISABLED)  # Make it read-only
-        
-        Button(self, text="Оплата картой", width=20, command=download, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672").pack(pady=5)
-        
-        Button(self, text="Оплата наличными", width=20, command=CashWindow, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672").pack(pady=5)
-
-        Button(self, text="Закрыть", width=20, command=self.destroy, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672").pack()
-
+def PaymentWindow():
+    mainFrame.place_forget()
+    PaymentWinFrame.pack()
+    buyWinFrame.pack_forget()
 
 # ---------- UI ----------
 win = Tk()
-win.title("Attempt 4")
+win.title("Simulator Cash Register")
 win.geometry("700x500")
 win.config(bg="#1E1E1E")
 
@@ -234,22 +203,24 @@ style.configure("TButton",
                 foreground="#e0e0e0",  # Светлый текст
                 borderwidth=0)        # Убираем рамку
 
-listbox = Listbox(win, height=5, width=20, border=0, bg="#181818", fg="#e0e0e0", highlightthickness=1, highlightbackground="#2a2a2a", highlightcolor="#2a2a2a")
+mainFrame = Frame(win, bg="#1E1E1E")
+
+listbox = Listbox(mainFrame, height=5, width=20, border=0, bg="#181818", fg="#e0e0e0", highlightthickness=1, highlightbackground="#2a2a2a", highlightcolor="#2a2a2a")
 listbox.bind("<<ListboxSelect>>", on_select)
 
 # Поисковая строка
 search_var = StringVar()
 search_var.trace_add("write", on_search)
 
-search_entry = Entry(win, textvariable=search_var, width=65, bg="#181818", fg="grey", border=0,  highlightthickness=1, highlightbackground="#2a2a2a", highlightcolor="#2a2a2a", insertbackground="#e0e0e0")
+search_entry = Entry(mainFrame, textvariable=search_var, width=65, bg="#181818", fg="grey", border=0,  highlightthickness=1, highlightbackground="#2a2a2a", highlightcolor="#2a2a2a", insertbackground="#e0e0e0")
 search_entry.insert(0, " 🔍 Поиск...")
 search_entry.bind('<FocusIn>', on_entry_click)
 search_entry.bind('<FocusOut>', on_focus_out)
 search_entry.place(x=50, y=50, height=35)
 
 # --- Скроллируемый фрейм для корзины ---
-canvas = Canvas(win, width=300, height=250, bg="#181818", highlightthickness=1, highlightbackground="#2a2a2a", highlightcolor="#2a2a2a")
-scrollbar = ttk.Scrollbar(win, orient="vertical", style="Vertical.TScrollbar", command=canvas.yview)
+canvas = Canvas(mainFrame, width=300, height=250, bg="#181818", highlightthickness=1, highlightbackground="#2a2a2a", highlightcolor="#2a2a2a")
+scrollbar = ttk.Scrollbar(mainFrame, orient="vertical", style="Vertical.TScrollbar", command=canvas.yview)
 scrollable_frame = Frame(canvas, bg="#181818")
 
 scrollable_frame.bind(
@@ -260,33 +231,73 @@ scrollable_frame.bind(
 canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
 canvas.configure(yscrollcommand=scrollbar.set)
 
-listText = Label(win, text="Список товаров:", bg="#1E1E1E", fg="#E0E0E0")
+listText = Label(mainFrame, text="Список товаров:", bg="#1E1E1E", fg="#E0E0E0")
 listText.place(x=60, y=110)
 canvas.place(x=50, y=140)
 
 itemsFrame = scrollable_frame  # переопределяем имя для update_cart()
 
 # Чек и кнопки
-cheqText = Label(win, text="Чек:", bg="#1E1E1E", fg="#E0E0E0")
+cheqText = Label(mainFrame, text="Чек:", bg="#1E1E1E", fg="#E0E0E0")
 cheqText.place(x=410, y=120)
 
-cheq = Text(win, height=12, width=25, bg="#181818", fg="#e0e0e0", border=0, highlightthickness=1, highlightbackground="#2a2a2a", highlightcolor="#2a2a2a", insertbackground="#e0e0e0")
+cheq = Text(mainFrame, height=12, width=25, bg="#181818", fg="#e0e0e0", border=0, highlightthickness=1, highlightbackground="#2a2a2a", highlightcolor="#2a2a2a", insertbackground="#e0e0e0")
 cheq.config(state=DISABLED)
 cheq.place(x=400, y=150)
 
 def buy():
     if not cart:
-        box.showinfo("Корзина пуста", "Вы не выбрали товары для покупки.")
+        box.showerror("Корзина пуста", "Вы не выбрали товары для покупки.")
         return
-    BuyWindow(win)
+    BuyWindow()
     
     # downloadBtn = Button(win, text="Оплатить", width=20, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672", activeforeground="#ffffff", command=download)
     # downloadBtn.place(relx=1.0, rely=1.0, x=-20, y=-20, anchor="se")
 
-buyBtn = Button(win, text="Оплатить", width=20, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672", activeforeground="#ffffff", command=buy)
+buyBtn = Button(mainFrame, text="Оплатить", width=20, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672", activeforeground="#ffffff", command=buy)
 buyBtn.place(relx=1.0, rely=1.0, x=-20, y=-20, anchor="se")
 
-clearBtn = Button(win, text="Очистить", width=20, bg="#333b4f", fg  ="#E0E0E0", activebackground="#4a5672", activeforeground="#ffffff", command=clear_cart)
+clearBtn = Button(mainFrame, text="Очистить", width=20, bg="#333b4f", fg  ="#E0E0E0", activebackground="#4a5672", activeforeground="#ffffff", command=clear_cart)
 clearBtn.place(relx=1.0, rely=1.0, x=-220, y=-20, anchor="se")
 
+# ---------- Buy window ----------
+
+buyWinFrame = Frame(win, bg="#1E1E1E")
+
+Label(buyWinFrame, text="Способ оплаты", bg="#1E1E1E", fg="#E0E0E0", font=("Segoe UI", 12)).pack(pady=20)
+
+cheque_text = Text(buyWinFrame, height=10, width=40, bg="#181818", fg="#e0e0e0", border=0, highlightthickness=1, highlightbackground="#2a2a2a", insertbackground="#e0e0e0")
+cheque_text.pack(pady=10)
+
+# Copy the main window's cheque contents
+cheque_text.insert(END, cheq.get("1.0", END))
+cheque_text.config(state=DISABLED)  # Make it read-only
+
+Button(buyWinFrame, text="Оплата картой", width=20, command=download, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672").pack(pady=5)
+
+Button(buyWinFrame, text="Оплата наличными", width=20, command=PaymentWindow, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672").pack(pady=5)
+
+Button(buyWinFrame, text="Закрыть", width=20, command=MainWindow, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672").pack()
+
+
+# ---------- Cash payment ----------
+
+PaymentWinFrame = Frame(win, bg="#1E1E1E")
+
+Label(PaymentWinFrame, text="Введите купюру/копейку данную вам:", bg="#1E1E1E", fg="#E0E0E0").pack(pady=50)
+        
+num = StringVar()
+num.trace_add("write", update_change)
+
+Entry(PaymentWinFrame, textvariable=num, bg="#181818", fg="grey", border=0,  highlightthickness=1, highlightbackground="#2a2a2a", highlightcolor="#2a2a2a", insertbackground="#e0e0e0").pack(pady=10)
+
+change = Label(PaymentWinFrame, text="Сдача: 0", bg="#1E1E1E", fg="#E0E0E0")
+change.pack(pady=10)
+
+Button(PaymentWinFrame, text="Зафиксировать", width=20, command=download, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672", activeforeground="#ffffff").pack(pady=10)
+
+Button(PaymentWinFrame, text="Вернуться", width=20, command=BuyWindow, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672", activeforeground="#ffffff").pack(pady=10)
+
+
+MainWindow()
 win.mainloop()

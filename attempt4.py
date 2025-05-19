@@ -51,6 +51,13 @@ def on_focus_out(event):
         search_entry.insert(0, " 🔍 Поиск...")
         search_entry.config(fg='grey')
 
+def delete(n):
+    for var, name, price in selectedProducts:
+        if name == n:
+            var.set(0)  # Сбрасываем количество товара
+            break
+    update_cart()
+
 def update_cart():
     for widget in itemsFrame.winfo_children():
         widget.destroy()
@@ -75,6 +82,7 @@ def update_cart():
         Button(item_frame, text="-", command=lambda n=name: change_qty(n, -1), relief="flat", width=3, height=1, bg="#2a2a2a", fg="#e0e0e0").pack(side="left", padx=5)
         Label(item_frame, bg="#181818", fg="#e0e0e0", text=str(cart[name]), width=2).pack(side="left", padx=5)
         Button(item_frame, text="+", command=lambda n=name: change_qty(n, 1), relief="flat", width=3, height=1, bg="#2a2a2a", fg="#e0e0e0").pack(side="left", padx=5)
+        Button(item_frame, text="remove", command=lambda: delete(name), relief="flat", width=5, height=1, bg="#2a2a2a", fg="#e0e0e0").pack(side="left", padx=5)
 
         total += cart[name] * price
         cheq.config(state=NORMAL)
@@ -91,7 +99,7 @@ def update_cart():
         cheq.config(state=NORMAL)
         cheq.insert(END, "")
         cheq.config(state=DISABLED)
-        
+
     itemsFrame.bind("<Configure>", on_configure)
 
 def download():

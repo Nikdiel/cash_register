@@ -17,7 +17,8 @@ allProducts = [
 
 selectedProducts = []  
 checkbox_map = {}     
-cart = {}              
+cart = {}         
+totality = 0     
 
 def update_scroll_visibility():
     needs_scroll = canvas.bbox("all")[3] > canvas.winfo_height()
@@ -54,6 +55,7 @@ def update_cart():
     for widget in itemsFrame.winfo_children():
         widget.destroy()
 
+    cheq.config(state=NORMAL)
     cheq.delete('1.0', END)
     total = 0
 
@@ -80,6 +82,8 @@ def update_cart():
         cheq.config(state=DISABLED)
         
     if total != 0:
+        global totality
+        totality += total
         cheq.config(state=NORMAL)
         cheq.insert(END, f"\nИтого: {total} тг")
         cheq.config(state=DISABLED)
@@ -147,20 +151,8 @@ def update_change(*args):
     
     if n == "":
         change.config(text="Сдача: 0")
-    elif n < 10000 and n > 2000 and n > 1000 and n > 500 and n > 100 and n > 50:
-        change.config(text=f"Сдача: {10000-n}")
-    elif n < 2000 and n < 10000 and n > 1000 and n > 500 and n > 100 and n > 50:
-        change.config(text=f"Сдача: {2000-n}")
-    elif n < 1000 and n < 2000 and n < 10000 and n > 500 and n > 100 and n > 50:
-        change.config(text=f"Сдача: {1000-n}")
-    elif n < 500 and n < 2000 and n < 1000 and n < 10000 and n > 100 and n > 50:
-        change.config(text=f"Сдача: {500-n}")
-    elif n < 100 and n < 2000 and n < 1000 and n < 500 and n < 10000 and n > 50:
-        change.config(text=f"Сдача: {100-n}")
-    elif n < 50 and n < 2000 and n < 1000 and n < 500 and n < 100 and n < 10000:
-        change.config(text=f"Сдача: {50-n}")
     else:
-        print("tresh")
+        change.config(text=f"Сдача: {n - totality}")
         
 def MainWindow():
     mainFrame.place(relwidth=1, relheight=1)
@@ -249,6 +241,11 @@ def buy():
     if not cart:
         box.showerror("Корзина пуста", "Вы не выбрали товары для покупки.")
         return
+    cheque_text.config(state=NORMAL)
+    cheque_text.delete(1.0, END)
+    cheque_text.insert(END, cheq.get("1.0", END))
+    cheque_text.config(state=DISABLED)  # Make it read-only
+
     BuyWindow()
     
     # downloadBtn = Button(win, text="Оплатить", width=20, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672", activeforeground="#ffffff", command=download)
@@ -269,9 +266,6 @@ Label(buyWinFrame, text="Способ оплаты", bg="#1E1E1E", fg="#E0E0E0",
 cheque_text = Text(buyWinFrame, height=10, width=40, bg="#181818", fg="#e0e0e0", border=0, highlightthickness=1, highlightbackground="#2a2a2a", insertbackground="#e0e0e0")
 cheque_text.pack(pady=10)
 
-# Copy the main window's cheque contents
-cheque_text.insert(END, cheq.get("1.0", END))
-cheque_text.config(state=DISABLED)  # Make it read-only
 
 Button(buyWinFrame, text="Оплата картой", width=20, command=download, bg="#333b4f", fg="#E0E0E0", activebackground="#4a5672").pack(pady=5)
 

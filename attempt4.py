@@ -10,7 +10,7 @@ allProducts = [
     {'name': 'Хлеб', 'price': 40},
     {'name': 'Сыр', 'price': 150},
     {'name': 'Сок', 'price': 100},
-    {'name': 'Масло', 'price': 120},
+    {'name': 'Масло', 'price': 120},    
     {'name': 'Кофе', 'price': 200},
     {'name': 'Чай', 'price': 160}
 ]
@@ -18,7 +18,7 @@ allProducts = [
 selectedProducts = []  
 checkbox_map = {}     
 cart = {}         
-totality = 0     
+payment = 'cart'
 
 def update_scroll_visibility():
     needs_scroll = canvas.bbox("all")[3] > canvas.winfo_height()
@@ -82,7 +82,7 @@ def update_cart():
         Button(item_frame, text="-", command=lambda n=name: change_qty(n, -1), relief="flat", width=3, height=1, bg="#2a2a2a", fg="#e0e0e0").pack(side="left", padx=5)
         Label(item_frame, bg="#181818", fg="#e0e0e0", text=str(cart[name]), width=2).pack(side="left", padx=5)
         Button(item_frame, text="+", command=lambda n=name: change_qty(n, 1), relief="flat", width=3, height=1, bg="#2a2a2a", fg="#e0e0e0").pack(side="left", padx=5)
-        Button(item_frame, text="remove", command=lambda: delete(name), relief="flat", width=5, height=1, bg="#2a2a2a", fg="#e0e0e0").pack(side="left", padx=5)
+        Button(item_frame, text="отмена", command=lambda: delete(name), relief="flat", width=5, height=1, bg="#2a2a2a", fg="#e0e0e0").pack(side="left", padx=5)
 
         total += cart[name] * price
         cheq.config(state=NORMAL)
@@ -91,6 +91,7 @@ def update_cart():
         
     if total != 0:
         global totality
+        totality = 0
         totality += total
         cheq.config(state=NORMAL)
         cheq.insert(END, f"\nИтого: {total} тг")
@@ -103,11 +104,23 @@ def update_cart():
     itemsFrame.bind("<Configure>", on_configure)
 
 def download():
+    if payment == 'cash':
+        cheq.config(state=NORMAL)
+        cheq.insert(END, "\n\nСпособ оплаты: наличные")
+        cheq.insert(END, f"\n\nВнесенная сумма: {num.get()}")
+        cheq.insert(END, f"\n\nСдача: {num_change}")
+    elif payment == 'cart':
+        cheq.config(state=NORMAL)
+        cheq.insert(END, "\n\nСпособ оплаты: карта")
+    
+    cheque = cheq.get("1.0", END)
     box.showinfo("Оплата", message="Оплата прошла успешно")
     with open("cheque.txt", "w", encoding="utf-8") as f:
         f.write("Чек от: " + datetime.now().strftime("%d.%m.%Y %H:%M:%S") + "\n\n")
-        f.write(cheq.get("1.0", END))
+        f.write(cheque)
+        
     print("Чек сохранён.")
+    
     clear_cart()
     MainWindow()
 
@@ -160,7 +173,9 @@ def update_change(*args):
     if n == "":
         change.config(text="Сдача: 0")
     else:
-        change.config(text=f"Сдача: {n - totality}")
+        global num_change
+        num_change = n - totality
+        change.config(text=f"Сдача: {num_change}")
         
 def MainWindow():
     mainFrame.place(relwidth=1, relheight=1)
@@ -173,6 +188,8 @@ def BuyWindow():
     buyWinFrame.pack()
     
 def PaymentWindow():
+    global payment
+    payment = 'cash'
     mainFrame.place_forget()
     PaymentWinFrame.pack()
     buyWinFrame.pack_forget()
@@ -291,7 +308,8 @@ Label(PaymentWinFrame, text="Введите купюру/копейку данн
 num = StringVar()
 num.trace_add("write", update_change)
 
-Entry(PaymentWinFrame, textvariable=num, bg="#181818", fg="grey", border=0,  highlightthickness=1, highlightbackground="#2a2a2a", highlightcolor="#2a2a2a", insertbackground="#e0e0e0").pack(pady=10)
+cashEntry = Entry(PaymentWinFrame, textvariable=num, bg="#181818", fg="#fff", border=0,  highlightthickness=1, highlightbackground="#2a2a2a", highlightcolor="#2a2a2a", insertbackground="#fff")
+cashEntry.pack(pady=10)
 
 change = Label(PaymentWinFrame, text="Сдача: 0", bg="#1E1E1E", fg="#E0E0E0")
 change.pack(pady=10)
